@@ -132,6 +132,15 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue'
 
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+
+  return sorted[mid]
+}
+
+const freqHistory = []
+
 const isListening = ref(false)
 const frequency = ref(0)
 const note = ref('-')
@@ -224,6 +233,10 @@ async function startListening() {
       window.AudioContext || window.webkitAudioContext
 
     const audioContext = new AudioContextClass()
+    const highpass = audioContext.createBiquadFilter()
+      highpass.type = 'highpass'
+      highpass.frequency.value = 45
+      highpass.Q.value = 0.7
 
     // IMPORTANTE PARA iOS
     if (audioContext.state === 'suspended') {
@@ -236,6 +249,7 @@ async function startListening() {
     const microphone =
       audioContext.createMediaStreamSource(stream)
 
+    microphone.connect(highpass)
     microphone.connect(analyser)
 
     audioContextRef.value = audioContext
@@ -283,15 +297,27 @@ function detectPitch() {
 
     rms = Math.sqrt(rms / buffer.length)
 
+    if (rms < 0.02) {
+       rafRef.value = requestAnimationFrame(update)
+      return
+    }
+
     volume.value = Math.min(100, rms * 400)
 
     if (freq > 20 && freq < 500) {
-      frequency.value = freq
+      freqHistory.push(freq)
+        // mantener buffer corto
+        if (freqHistory.length > 7) {
+          freqHistory.shift()
+        }
+        // esperar a tener suficientes muestras
+        if (freqHistory.length < 3) return
+        const stableFreq = median(freqHistory)
+        frequency.value = stableFreq
+        const n = frequencyToNote(stableFreq)
 
-      const n = frequencyToNote(freq)
-
-      note.value = `${n.note}${n.octave}`
-      cents.value = n.cents
+        note.value = `${n.note}${n.octave}`
+        cents.value = n.cents
     }
 
     rafRef.value = requestAnimationFrame(update)
