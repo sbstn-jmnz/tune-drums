@@ -285,10 +285,7 @@ function detectPitch() {
   const buffer = new Float32Array(analyser.fftSize)
 
   const update = () => {
-    analyser.getFloatTimeDomainData(buffer)
-
     const freq = autoCorrelate(buffer, audioContext.sampleRate)
-
     let rms = 0
 
     for (let i = 0; i < buffer.length; i++) {
@@ -298,29 +295,32 @@ function detectPitch() {
     rms = Math.sqrt(rms / buffer.length)
 
     if (rms < 0.02) {
-       rafRef.value = requestAnimationFrame(update)
+      rafRef.value = requestAnimationFrame(update)
       return
     }
 
     volume.value = Math.min(100, rms * 400)
 
-    if (freq > 20 && freq < 500) {
-      freqHistory.push(freq)
-        // mantener buffer corto
-        if (freqHistory.length > 7) {
-          freqHistory.shift()
-        }
-        // esperar a tener suficientes muestras
-        if (freqHistory.length < 3) return
-        const stableFreq = median(freqHistory)
+    let stableFreq = freq
+
+    freqHistory.push(freq)
+
+    if (freqHistory.length > 7) {
+        freqHistory.shift()
+    }
+
+    if (freqHistory.length >= 3) {
+        stableFreq = median(freqHistory)
+    }
+
+    if (stableFreq > 20 && stableFreq < 500) {
         frequency.value = stableFreq
+
         const n = frequencyToNote(stableFreq)
 
         note.value = `${n.note}${n.octave}`
         cents.value = n.cents
     }
-
-    rafRef.value = requestAnimationFrame(update)
   }
 
   update()
