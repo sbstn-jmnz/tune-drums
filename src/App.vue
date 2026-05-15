@@ -148,6 +148,13 @@ const cents = ref(0)
 const volume = ref(0)
 const targetFreq = ref(110)
 
+const isLocked = ref(false)
+const lockedFreq = ref(0)
+const lockUntil = ref(0)
+
+const ATTACK_THRESHOLD = 0.06
+const RELEASE_TIME = 500 // ms
+
 const audioContextRef = ref(null)
 const analyserRef = ref(null)
 const rafRef = ref(null)
@@ -285,45 +292,61 @@ function detectPitch() {
   const buffer = new Float32Array(analyser.fftSize)
 
   const update = () => {
-    analyser.getFloatTimeDomainData(buffer)
-    const freq = autoCorrelate(buffer, audioContext.sampleRate)
-    let rms = 0
+  analyser.getFloatTimeDomainData(buffer)
 
-    for (let i = 0; i < buffer.length; i++) {
-      rms += buffer[i] * buffer[i]
-    }
+  const freq = autoCorrelate(buffer, audioContext.sampleRate)
 
-    rms = Math.sqrt(rms / buffer.length)
-
-    if (rms < 0.02) {
-      rafRef.value = requestAnimationFrame(update)
-      return
-    }
-
-    volume.value = Math.min(100, rms * 400)
-
-    let stableFreq = freq
-
-    freqHistory.push(freq)
-
-    if (freqHistory.length > 7) {
-        freqHistory.shift()
-    }
-
-    if (freqHistory.length >= 3) {
-        stableFreq = median(freqHistory)
-    }
-
-    if (stableFreq > 20 && stableFreq < 500) {
-        frequency.value = stableFreq
-
-        const n = frequencyToNote(stableFreq)
-
-        note.value = `${n.note}${n.octave}`
-        cents.value = n.cents
-    }
-    rafRef.value = requestAnimationFrame(update)
+  let rms = 0
+  for (let i = 0; i < buffer.length; i++) {
+    rms += buffer[i] * buffer[i]
   }
+  rms = Math.sqrt(rms / buffer.length)
+
+  const now = Date.now()
+
+  const isAttack = rms > ATTACK_THRESHOLD && !isLocked.value
+
+  if (isAttack) {
+    isLocked.value = true
+    lockUntil.value = now + RELEASE_TIME
+    lockedFreq.value = freq
+  }
+
+  if (!isLocked.value && rms < ATTACK_THRESHOLD) {
+    rafRef.value = requestAnimationFrame(update)
+    return
+  }
+
+  let stableFreq = freq
+
+  freqHistory.push(freq)
+  if (freqHistory.length > 7) freqHistory.shift()
+
+  if (freqHistory.length >= 3) {
+    stableFreq = median(freqHistory)
+  }
+
+  if (isLocked.value) {
+    stableFreq = lockedFreq.value
+  }
+
+  if (isLocked.value && now > lockUntil.value) {
+    isLocked.value = false
+  }
+
+  volume.value = Math.min(100, rms * 400)
+
+  if (stableFreq > 20 && stableFreq < 500) {
+    frequency.value = stableFreq
+
+    const n = frequencyToNote(stableFreq)
+
+    note.value = `${n.note}${n.octave}`
+    cents.value = n.cents
+  }
+
+  rafRef.value = requestAnimationFrame(update)
+}
 
   update()
 }
