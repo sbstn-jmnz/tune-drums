@@ -249,8 +249,8 @@ async function startListening() {
     const microphone =
       audioContext.createMediaStreamSource(stream)
 
-    microphone.connect(highpass)
-    microphone.connect(analyser)
+      microphone.connect(highpass)
+      highpass.connect(analyser)
 
     audioContextRef.value = audioContext
     analyserRef.value = analyser
@@ -285,6 +285,7 @@ function detectPitch() {
   const buffer = new Float32Array(analyser.fftSize)
 
   const update = () => {
+    analyser.getFloatTimeDomainData(buffer)
     const freq = autoCorrelate(buffer, audioContext.sampleRate)
     let rms = 0
 
@@ -321,6 +322,7 @@ function detectPitch() {
         note.value = `${n.note}${n.octave}`
         cents.value = n.cents
     }
+    rafRef.value = requestAnimationFrame(update)
   }
 
   update()
