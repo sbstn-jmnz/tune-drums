@@ -1,12 +1,11 @@
 <template>
     <section class="main-panel">
+      <!-- Frecuencia y Nota -->
       <div class="display-row">
         <div>
           <div class="label">Detected Frequency</div>
-  
           <div class="frequency">
-            {{ frequency ? frequency.toFixed(1) : '--' }}
-            <span>Hz</span>
+            {{ frequency ? frequency.toFixed(1) : '--' }}<span>Hz</span>
           </div>
         </div>
   
@@ -16,6 +15,7 @@
         </div>
       </div>
   
+      <!-- Tuner -->
       <div class="tuner-section">
         <div class="tuner-labels">
           <span>Flat</span>
@@ -25,11 +25,7 @@
   
         <div class="tuner-bar">
           <div class="center-line"></div>
-  
-          <div
-            class="cents-indicator"
-            :style="indicatorStyle"
-          ></div>
+          <div class="cents-indicator" :style="indicatorStyle"></div>
         </div>
   
         <div class="cents-display">
@@ -37,41 +33,30 @@
         </div>
       </div>
   
+      <!-- Controles -->
       <div class="controls-grid">
         <div class="card">
           <div class="label">Target Frequency</div>
-  
-          <div class="target">
-            {{ targetFreq }} Hz
-          </div>
-  
+          <div class="target">{{ targetFreq }} Hz</div>
           <input
             type="range"
             min="40"
             max="300"
             :value="targetFreq"
-            @input="$emit('updateTarget', Number($event.target.value))"
+            @input="$emit('updateTarget', +$event.target.value)"
           />
         </div>
   
         <div class="card">
           <div class="label">Difference</div>
-  
-          <div
-            class="difference"
-            :class="Math.abs(diff) < 1 ? 'green' : 'orange'"
-          >
+          <div class="difference" :class="Math.abs(diff) < 1 ? 'green' : 'orange'">
             {{ diff > 0 ? '+' : '' }}{{ diff.toFixed(1) }} Hz
           </div>
   
           <div class="volume-section">
             <div class="label">Input Level</div>
-  
             <div class="volume-bar">
-              <div
-                class="volume-fill"
-                :style="{ width: volume + '%' }"
-              ></div>
+              <div class="volume-fill" :style="{ width: volume + '%' }"></div>
             </div>
           </div>
         </div>
@@ -87,8 +72,7 @@
     indicatorStyle: Object,
     targetFreq: Number,
     diff: Number,
-    volume: Number,
+    volume: Number
   })
-  
-  defineEmits(['updateTarget'])
   </script>
+  

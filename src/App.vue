@@ -3,8 +3,8 @@
     <div class="container">
       <HeaderBar
         :isListening="isListening"
-        @start="startListening"
-        @stop="stopListening"
+        @startMic="startListening"
+        @stopMic="stopListening"
       />
 
       <main class="grid">
@@ -21,7 +21,7 @@
 
         <DrumPresets
           :presets="drumPresets"
-          @select="targetFreq = $event"
+          @selectPreset="targetFreq = $event"
         />
       </main>
     </div>
@@ -29,11 +29,10 @@
 </template>
 
 <script setup>
+import { useTuner } from './composables/useTuner.js'
 import HeaderBar from './components/HeaderBar.vue'
 import TunerDisplay from './components/TunerDisplay.vue'
 import DrumPresets from './components/DrumPresets.vue'
-
-import { useTuner } from './composables/useTuner'
 
 const {
   frequency,
@@ -50,4 +49,3 @@ const {
 } = useTuner()
 </script>
 
-<style src="./styles/app.css"></style>

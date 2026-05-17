@@ -7,7 +7,7 @@
   
       <button
         v-if="!isListening"
-        @click="$emit('start')"
+        @click="$emit('startMic')"
         class="start-btn"
       >
         Start Mic
@@ -15,7 +15,7 @@
   
       <button
         v-else
-        @click="$emit('stop')"
+        @click="$emit('stopMic')"
         class="stop-btn"
       >
         Stop
@@ -25,8 +25,6 @@
   
   <script setup>
   defineProps({
-    isListening: Boolean,
+    isListening: Boolean
   })
-  
-  defineEmits(['start', 'stop'])
   </script>

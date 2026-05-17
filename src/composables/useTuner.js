@@ -1,7 +1,7 @@
-// composables/useTuner.js
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { median } from '../utils/median.js'
 import { frequencyToNote } from '../utils/frequencyToNote.js'
+import { autoCorrelate } from '../services/pitch-detection.service.js'
 
 export function useTuner() {
   const frequency = ref(0)
@@ -11,16 +11,16 @@ export function useTuner() {
   const targetFreq = ref(110)
   const isListening = ref(false)
 
+  const audioContextRef = ref(null)
+  const analyserRef = ref(null)
+  const rafRef = ref(null)
+
   const isLocked = ref(false)
   const lockedFreq = ref(0)
   const lockUntil = ref(0)
 
   const ATTACK_THRESHOLD = 0.06
-  const RELEASE_TIME = 500 // ms
-
-  const audioContextRef = ref(null)
-  const analyserRef = ref(null)
-  const rafRef = ref(null)
+  const RELEASE_TIME = 500
 
   const drumPresets = [
     { name: '10” Tom', freq: 147 },
@@ -38,31 +38,7 @@ export function useTuner() {
     transform: `translateX(${cents.value < 0 ? '-100%' : '0%'})`,
   }))
 
-  function autoCorrelate(buffer, sampleRate) {
-    let SIZE = buffer.length
-    let rms = 0
-
-    for (let i = 0; i < SIZE; i++) rms += buffer[i] ** 2
-    rms = Math.sqrt(rms / SIZE)
-    if (rms < 0.01) return -1
-
-    const c = new Array(SIZE).fill(0)
-    for (let i = 0; i < SIZE; i++)
-      for (let j = 0; j < SIZE - i; j++) c[i] += buffer[j] * buffer[j + i]
-
-    let d = 0
-    while (c[d] > c[d + 1]) d++
-
-    let maxval = -1
-    let maxpos = -1
-    for (let i = d; i < SIZE; i++)
-      if (c[i] > maxval) {
-        maxval = c[i]
-        maxpos = i
-      }
-
-    return sampleRate / maxpos
-  }
+  const freqHistory = []
 
   async function startListening() {
     try {
@@ -72,8 +48,6 @@ export function useTuner() {
 
       const AudioContextClass = window.AudioContext || window.webkitAudioContext
       const audioContext = new AudioContextClass()
-
-      // Para iOS
       if (audioContext.state === 'suspended') await audioContext.resume()
 
       const highpass = audioContext.createBiquadFilter()
@@ -90,7 +64,6 @@ export function useTuner() {
 
       audioContextRef.value = audioContext
       analyserRef.value = analyser
-
       isListening.value = true
 
       detectPitch()
@@ -110,8 +83,6 @@ export function useTuner() {
     volume.value = 0
   }
 
-  const freqHistory = []
-
   function detectPitch() {
     const analyser = analyserRef.value
     const audioContext = audioContextRef.value
@@ -119,7 +90,6 @@ export function useTuner() {
 
     const update = () => {
       analyser.getFloatTimeDomainData(buffer)
-
       const freq = autoCorrelate(buffer, audioContext.sampleRate)
 
       let rms = 0
