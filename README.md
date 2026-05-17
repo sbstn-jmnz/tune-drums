@@ -1,5 +1,78 @@
-# Vue 3 + Vite
+# DrumTune
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+![Tests](https://github.com/sbstn-jmnz/tune-drums/actions/workflows/test.yml/badge.svg)
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+Web drum tuner.
+
+Built with Vue 3 + Web Audio API.
+
+## Features
+
+- Real-time drum pitch detection
+- Fundamental frequency estimation
+- Median smoothing
+- Attack detection
+- Pitch lock stabilization
+- Rejection decay
+- Drum tuning presets
+- Responsive UI
+- Unit tests with Vitest
+
+## Tech Stack
+
+- Vue 3
+- Vite
+- Web Audio API
+- Vitest
+
+## Getting Started
+
+### Install
+
+```bash
+npm install
+```
+
+### Run dev server
+
+```bash
+npm run dev
+```
+
+### Run tests
+
+```bash
+npm test
+```
+
+## Project Structure
+
+```txt
+src/
+├── components/
+├── composables/
+├── services/
+├── utils/
+└── styles/
+```
+
+## Drum Tuning Workflow
+
+1. Mute opposite drum head
+2. Tap near one lug
+3. Match all lug frequencies
+4. Check center pitch
+5. Save preset
+
+## Roadmap
+
+- [ ] FFT spectral view
+- [ ] Saved custom presets
+- [ ] Mobile optimization
+- [ ] WASM pitch detection
+- [ ] Recording/export
+- [ ] Harmonic suppression
+
+## License
+
+MIT

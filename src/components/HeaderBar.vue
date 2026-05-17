@@ -2,7 +2,7 @@
     <header class="header">
       <div>
         <h1>DrumTune</h1>
-        <p>Web drum tuner inspired by Tune-Bot hardware</p>
+        <p>Web drum tuner</p>
       </div>
   
       <button
